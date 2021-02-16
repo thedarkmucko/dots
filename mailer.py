@@ -12,7 +12,7 @@ DATA_ROOT = PROJECT_ROOT / 'data'
 
 
 class EmailObject:
-    """Email Object is the core information from the process.csv"""
+    """Email Object is the core information from the announcement.csv"""
     def __init__(self, **kwargs):
 
         for key, value in kwargs.items():
@@ -164,7 +164,7 @@ def send_mail(obj: EmailObject, subject="Announcement") -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="Send Emails to customers")
-    parser.add_argument('--file', default=(DATA_ROOT / 'process.csv'),
+    parser.add_argument('--file', default=(DATA_ROOT / 'announcement.csv'),
                         type=pathlib.Path, help="Path to file to be processed")
     parser.add_argument('--type', type=str, default="Announcement", help="Type of subject")
     parser.add_argument('--db', type=str, help="Database")
