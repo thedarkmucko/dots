@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title%}Problem{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 id="problem"><span id="hash">#</span> Problem</h1>
+    <p>Dear customer,<br>The planned maintenance on the systems
+        {% for system in systems %}
+        {{ system }}
+        {% endfor %} is experiencing problems.<br>
+        We are working on a solution!
+    </p>
+    {{ services }}
+    <p>
+        <b>Planned Task:</b><br>
+        {{ task }}
+    </p>
+    <p>In case of questions do not hesitate to contact the implementor {{
+    contact }} on {{ contact_no }}.</p>
+</div>
+{% endblock %}

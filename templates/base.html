@@ -5,17 +5,23 @@
     <title>{% block title %}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style type="text/css">
-      .container {
-        max-width: 500px;
-        padding: 50px;
-      }
-      .container h1 {
-      color: red;
-      }
+    body { margin:0; padding: 0; box-sizing: border-box; }
+    .container { max-width: 900px; padding: 10px; }
+    .container h1 { color: #00cc00; }
+    .container h1 #hash { color: black; }
+    .container #problem {color: red; }
     </style>
 </head>
 <body>
 {% block content%}
 {% endblock %}
+<footer>
+    <b>DBConcepts GmbH</b><br>
+    Donau-City Straße 11 - Ares Tower<br>
+    A-1220 Wien<br>
+    <p>Wir sind nur einen Anruf entfernt.: +43 1 890 89 990</p>
+    <img
+            src="https://www.dbconcepts.com/wp-content/uploads/2020/10/DBC_Logo.jpg" width="150px">
+</footer>
 </body>
 </html>

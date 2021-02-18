@@ -1,2 +1,2 @@
-dbname,services,time,approval,receiver,cc,task
-psorger,hr.example.com,16.02.2021 23:00,N,peter.sorger@dbconcepts.com,,Switchover
+system,services,starttime,endtime,downtime,approval,receiver,cc,contact,contact_no,task
+vsvps01;vsvps02,hr.example.com,18.02.2021 17:00,18.02.2021 17:30,Y,N,peter.sorger@dbconcepts.com,dba.services.t1@dbconcepts.at,peter.sorger@dbconcepts.at,+43 664 80289366,Database Home Patching - Patch 25792911: HOTMDFY:ORA-600: IPC_RECREATE_QUE_2

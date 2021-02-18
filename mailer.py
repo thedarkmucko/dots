@@ -13,27 +13,41 @@ DATA_ROOT = PROJECT_ROOT / 'data'
 
 class EmailObject:
     """Email Object is the core information from the announcement.csv"""
+
     def __init__(self, **kwargs):
 
         for key, value in kwargs.items():
 
-            if key == 'dbname':
-                self._dbname = value
+            if key == 'system':
+                system_list = value.split(';')
+                self._system = system_list
 
             if key == 'services':
                 self._services = value
 
-            if key == 'time':
+            if key == 'starttime':
                 if not value:
-                    self._time = datetime.min
+                    self._start_time = datetime.min
                 else:
-                    self._time = helpers.cd_to_datetime(value)
+                    self._start_time = helpers.cd_to_datetime(value)
+
+            if key == 'endtime':
+                if not value:
+                    self._end_time = datetime.min
+                else:
+                    self._end_time = helpers.cd_to_datetime(value)
+
+            if key == 'downtime':
+                if value == 'Y':
+                    self._downtime = 'YES'
+                else:
+                    self._downtime = 'NO'
 
             if key == 'approval':
                 if value == 'Y':
-                    self._approval = True
+                    self._approval = 'YES'
                 else:
-                    self._approval = False
+                    self._approval = 'NO'
 
             if key == 'receivers':
                 if not value:
@@ -52,6 +66,12 @@ class EmailObject:
             if key == 'task':
                 self._task = value
 
+            if key == 'contact':
+                self._contact = value
+
+            if key == 'contact_no':
+                self._contact_no = value
+
     @property
     def receivers(self) -> list[str]:
         return self._receivers
@@ -61,24 +81,30 @@ class EmailObject:
         return self._cc
 
     @property
-    def database(self):
-        return self._dbname
+    def system(self):
+        return self._system
 
     @property
     def services(self) -> str:
-        out = '<h3>Betroffene Services:</h3>'
+        out = '<h3>Affected Services:</h3>'
         items = self._services.split(";")
         for item in items:
             out += item + "<br>"
         return out
 
     def __str__(self):
-        return (f"{helpers.datetime_to_str(self._time)} / {self._task} on {self._dbname} - "
-                f"Approval required: {str(self._approval)}")
+        return (f" Affected Systems: {list_to_string(self._system)} - "
+                f"Start Time: {helpers.datetime_to_str(self._start_time)}, "
+                f"Approval required: {str(self._approval)}, "
+                f"Downtime: {self._downtime}")
 
     @property
-    def time(self):
-        return self._time
+    def start_time(self):
+        return self._start_time
+
+    @property
+    def end_time(self):
+        return self._end_time
 
 
 def load_csv(file):
@@ -90,23 +116,33 @@ def load_csv(file):
     with open(infile, 'r') as _io:
         data = csv.DictReader(_io)
         for row in data:
-            o_email = EmailObject(dbname=row['dbname'], services=row['services'], time=row['time'],
-                                  approval=row['approval'], receivers=row['receiver'], cc=row['cc'],
-                                  task=row['task']
+            o_email = EmailObject(system=row['system'],
+                                  services=row['services'],
+                                  starttime=row['starttime'],
+                                  endtime=row['endtime'],
+                                  downtime=row['downtime'],
+                                  approval=row['approval'],
+                                  receivers=row['receiver'],
+                                  cc=row['cc'],
+                                  task=row['task'],
+                                  contact=row['contact'],
+                                  contact_no=row['contact_no']
                                   )
             out.append(o_email)
     return out
 
 
-def send_mail(obj: EmailObject, subject="Announcement") -> None:
+def list_to_string(i_list):
+    return ' '.join([str(elem) for elem in i_list])
 
+
+def send_mail(obj: EmailObject, subject="Announcement") -> None:
     from jinja2 import Environment, FileSystemLoader
 
     sender_email = "noone@example.com"
     message = MIMEMultipart("alternative")
 
     message["From"] = "notify@dbconcepts.at"
-    message["Subject"] = "[" + subject + "] " + str(obj)
     message["To"] = ', '.join(obj.receivers)
 
     if obj.cc is not None:
@@ -118,47 +154,86 @@ def send_mail(obj: EmailObject, subject="Announcement") -> None:
     file_loader = FileSystemLoader('templates')
     env = Environment(loader=file_loader)
 
-    template = env.get_template("announcement.html")
-    output = template.render()
-
     if subject == "Maintenance":
-        text = (f"<br>Sehr geehrte Damen und Herren,<br>"
-                f"Auf dem Datenbank System wird die Wartung jetzt durchgeführt. <br>"
-                f"Die Datenbank <b>{obj.database}</b> wird in den Wartungsarbeiten geswitcht.<br>"
-                f"Wir erwarten keine Unterbrechungen der Dienste! <br>"
-                f"{obj.services}<br>"
-                f"Ihr DBConcepts,<br>"
-                f"Wir sind nur einen Anruf entfernt: +43 1 890 89 990")
+        template = env.get_template("maintenance.html")
+        output = template.render(systems=obj.system, downtime=obj._downtime,
+                                 starttime=obj.start_time,
+                                 endtime=obj.end_time, task=obj._task,
+                                 contact=obj._contact,
+                                 contact_no=obj._contact_no, services=obj.services)
 
-    if subject == "Announcement":
+        message["Subject"] = f"{subject} started - " \
+                             f"{list_to_string(obj.system)} " \
+                             f"Downtime: {obj._downtime}, "
+
         text = output
 
-    if subject == "Finished":
-        text = (f"<br>Sehr geehrte Damen und Herren,<br>"
-                f"Auf dem Datenbank System <b>{obj.database}</b> wurde die Wartung durchgeführt. <br>"
-                f"Bitte um Kontrolle der Dienste, bei Fragen und Problemen rufen Sie uns bitte an! <br><br>"
-                f"Ihr DBConcepts,<br>"
-                f"Wir sind nur einen Anruf entfernt: +43 1 890 89 990")
+    if subject == "Announcement":
+        template = env.get_template("announcement.html")
+        output = template.render(systems=obj.system, downtime=obj._downtime,
+                                 starttime=obj.start_time,
+                                 endtime=obj.end_time, task=obj._task,
+                                 contact=obj._contact,
+                                 contact_no=obj._contact_no, services=obj.services)
+
+        message["Subject"] = f"{subject} - " \
+                             f"Upcoming maintenance on systems: " \
+                             f"{list_to_string(obj.system)}, " \
+                             f"Approval required: {obj._approval}, " \
+                             f"Downtime: {obj._downtime}, " \
+                             f"Start Time: {obj.start_time}, "
+        text = output
+
+    if subject == "Completed":
+        template = env.get_template("completed.html")
+        output = template.render(systems=obj.system, downtime=obj._downtime,
+                                 starttime=obj.start_time,
+                                 endtime=obj.end_time, task=obj._task,
+                                 contact=obj._contact,
+                                 contact_no=obj._contact_no,
+                                 services=obj.services)
+
+        message["Subject"] = f"Maintenance {subject} on systems: " \
+                             f"{list_to_string(obj.system)} "
+        text = output
 
     if subject == "Problem":
-        text = (f"<br>Sehr geehrte Damen und Herren,<br>"
-                f"Auf dem Datenbank System <b>{obj.database}</b> haben wir derzeit ein unerwartetes Problem. <br>"
-                f"Wir arbeiten daran mit Druck! <br><br>"
-                f"Ihr DBConcepts,<br>"
-                f"Wir sind nur einen Anruf entfernt: +43 1 890 89 990")
+        template = env.get_template("problem.html")
+        output = template.render(systems=obj.system, downtime=obj._downtime,
+                                 starttime=obj.start_time,
+                                 endtime=obj.end_time, task=obj._task,
+                                 contact=obj._contact,
+                                 contact_no=obj._contact_no,
+                                 services=obj.services)
+
+        message["Subject"] = f"{subject} during maintenance on systems: " \
+                             f"{list_to_string(obj.system)} occured!"
+        text = output
 
     if subject == "Reminder":
-        text = (f"<br>Sehr geehrte Damen und Herren,<br>"
-                f"Auf dem Datenbank System <b>{obj.database}</b> sollte bald eine Wartung durchgeführt werden. <br>"
-                f"Wenn es ein System ist, dass eine Freigabe benötigt werden wir auf den Anruf warten. <br><br>"
-                f"Ihr DBConcepts,<br>"
-                f"Wir sind nur einen Anruf entfernt: +43 1 890 89 990")
+        template = env.get_template("announcement.html")
+        output = template.render(systems=obj.system, downtime=obj._downtime,
+                                 starttime=obj.start_time,
+                                 endtime=obj.end_time, task=obj._task,
+                                 contact=obj._contact,
+                                 contact_no=obj._contact_no,
+                                 services=obj.services)
+
+        message["Subject"] = f"{subject} - " \
+                             f"Upcoming maintenance on systems: " \
+                             f"{list_to_string(obj.system)}, " \
+                             f"Approval required: {obj._approval}, " \
+                             f"Downtime: {obj._downtime}, " \
+                             f"Start Time: {obj.start_time}, " \
+                             f"Planned End Time: {obj.end_time}"
+        text = output
 
     part1 = MIMEText(text, "html")
     message.attach(part1)
 
     with smtplib.SMTP("localhost") as server:
-        server.send_message(message, from_addr=sender_email, to_addrs=recipients)
+        server.send_message(message, from_addr=sender_email,
+                            to_addrs=recipients)
         print("mail sent")
 
 
@@ -166,7 +241,8 @@ def main():
     parser = argparse.ArgumentParser(description="Send Emails to customers")
     parser.add_argument('--file', default=(DATA_ROOT / 'announcement.csv'),
                         type=pathlib.Path, help="Path to file to be processed")
-    parser.add_argument('--type', type=str, default="Announcement", help="Type of subject")
+    parser.add_argument('--type', type=str, default="Announcement",
+                        help="Type of subject")
     parser.add_argument('--db', type=str, help="Database")
     args = parser.parse_args()
 
@@ -179,7 +255,7 @@ def main():
 
     for email in data:
         # loop through the email database and check
-        if args.db == email.database:
+        if args.db == email.system:
             if args.type == "Announcement":
                 print(args.type, email)
                 send_mail(email)
@@ -188,7 +264,7 @@ def main():
                 send_mail(email, subject=args.type)
 
         if not args.db:
-            if today < email.time < midnight:
+            if today < email.start_time < midnight:
                 if args.type == "Announcement":
                     send_mail(email)
                     print(args.type, email)

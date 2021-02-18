@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title%}Announcement{% endblock %}
+{% block title%}Maintenance{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1><span id="hash">#</span> Announcement</h1>
-    <p>Dear customer,<br>There is a planned maintenance on the systems
+    <h1><span id="hash">#</span> Maintenance</h1>
+    <p>Dear customer,<br>The planned maintenance on the systems
         {% for system in systems %}
         {{ system }}
-        {% endfor %}.<br>
+        {% endfor %} begins.<br>
         {% if downtime == 'YES' %}
         We expect <b>downtime</b> on application services.
         {% else %}
