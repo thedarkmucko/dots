@@ -12,8 +12,8 @@
         {% if downtime == 'YES' %}
         We expect <b>downtime</b> on application services.
         {% else %}
-        We don't expect effects on application services. Short breaks might
-        happen.
+        We don't expect disruption of application services. Short
+        disruptions might happen.
         {% endif %}
     </p>
     {{ services }}
@@ -27,7 +27,5 @@
         <b>Planned Task:</b><br>
         {{ task }}
     </p>
-    <p>In case of questions do not hesitate to contact the implementor {{
-    contact }} on {{ contact_no }}.</p>
 </div>
 {% endblock %}

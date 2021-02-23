@@ -6,6 +6,8 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import helpers
+from enum import Enum
+from jinja2 import Environment, FileSystemLoader
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 DATA_ROOT = PROJECT_ROOT / 'data'
@@ -137,140 +139,148 @@ def list_to_string(i_list):
 
 
 def send_mail(obj: EmailObject, subject="Announcement") -> None:
-    from jinja2 import Environment, FileSystemLoader
-
-    sender_email = "noone@example.com"
+    sender_email = "notify@dbconcepts.at"
     message = MIMEMultipart("alternative")
 
     message["From"] = "notify@dbconcepts.at"
     message["To"] = ', '.join(obj.receivers)
 
-    if obj.cc is not None:
+    if obj.cc is None:
+        recipients = obj.receivers
+    else:
         message["Cc"] = ', '.join(obj.cc)
         recipients = obj.receivers + obj.cc
-    else:
-        recipients = obj.receivers
 
     file_loader = FileSystemLoader('templates')
     env = Environment(loader=file_loader)
 
     if subject == "Maintenance":
         template = env.get_template("maintenance.html")
-        output = template.render(systems=obj.system, downtime=obj._downtime,
+        text = template.render(systems=obj.system,
+                                 downtime=obj._downtime,
                                  starttime=obj.start_time,
-                                 endtime=obj.end_time, task=obj._task,
+                                 endtime=obj.end_time,
+                                 task=obj._task,
                                  contact=obj._contact,
-                                 contact_no=obj._contact_no, services=obj.services)
+                                 contact_no=obj._contact_no,
+                                 services=obj.services)
 
-        message["Subject"] = f"{subject} started - " \
+        message["Subject"] = f"Announcement: {subject} started on " \
                              f"{list_to_string(obj.system)} " \
-                             f"Downtime: {obj._downtime}, "
+                             f"Downtime: {obj._downtime} "
 
-        text = output
-
-    if subject == "Announcement":
+    elif subject == "Announcement":
         template = env.get_template("announcement.html")
-        output = template.render(systems=obj.system, downtime=obj._downtime,
+        text = template.render(systems=obj.system,
+                                 downtime=obj._downtime,
                                  starttime=obj.start_time,
-                                 endtime=obj.end_time, task=obj._task,
+                                 endtime=obj.end_time,
+                                 task=obj._task,
                                  contact=obj._contact,
-                                 contact_no=obj._contact_no, services=obj.services)
+                                 contact_no=obj._contact_no,
+                                 services=obj.services)
 
-        message["Subject"] = f"{subject} - " \
+        message["Subject"] = f"{subject}: " \
                              f"Upcoming maintenance on systems: " \
                              f"{list_to_string(obj.system)}, " \
                              f"Approval required: {obj._approval}, " \
                              f"Downtime: {obj._downtime}, " \
-                             f"Start Time: {obj.start_time}, "
-        text = output
+                             f"Start Time: {obj.start_time} "
 
-    if subject == "Completed":
+    elif subject == "Completed":
         template = env.get_template("completed.html")
-        output = template.render(systems=obj.system, downtime=obj._downtime,
+        text = template.render(systems=obj.system,
+                                 downtime=obj._downtime,
                                  starttime=obj.start_time,
-                                 endtime=obj.end_time, task=obj._task,
+                                 endtime=obj.end_time,
+                                 task=obj._task,
                                  contact=obj._contact,
                                  contact_no=obj._contact_no,
                                  services=obj.services)
 
-        message["Subject"] = f"Maintenance {subject} on systems: " \
+        message["Subject"] = f"Announcement: Maintenance " \
+                             f"{subject.lower()} on " \
+                             f"systems: " \
                              f"{list_to_string(obj.system)} "
-        text = output
 
-    if subject == "Problem":
+    elif subject == "Problem":
         template = env.get_template("problem.html")
-        output = template.render(systems=obj.system, downtime=obj._downtime,
+        text = template.render(systems=obj.system,
+                                 downtime=obj._downtime,
                                  starttime=obj.start_time,
-                                 endtime=obj.end_time, task=obj._task,
+                                 endtime=obj.end_time,
+                                 task=obj._task,
                                  contact=obj._contact,
                                  contact_no=obj._contact_no,
                                  services=obj.services)
 
-        message["Subject"] = f"{subject} during maintenance on systems: " \
-                             f"{list_to_string(obj.system)} occured!"
-        text = output
+        message["Subject"] = f"Announcement: {subject} during " \
+                             f"maintenance on systems: " \
+                         f"{list_to_string(obj.system)} occured!"
 
-    if subject == "Reminder":
+    elif subject == "Reminder":
         template = env.get_template("announcement.html")
-        output = template.render(systems=obj.system, downtime=obj._downtime,
+        text = template.render(systems=obj.system,
+                                 downtime=obj._downtime,
                                  starttime=obj.start_time,
-                                 endtime=obj.end_time, task=obj._task,
+                                 endtime=obj.end_time,
+                                 task=obj._task,
                                  contact=obj._contact,
                                  contact_no=obj._contact_no,
                                  services=obj.services)
 
-        message["Subject"] = f"{subject} - " \
+        message["Subject"] = f"{subject}: " \
                              f"Upcoming maintenance on systems: " \
                              f"{list_to_string(obj.system)}, " \
                              f"Approval required: {obj._approval}, " \
                              f"Downtime: {obj._downtime}, " \
                              f"Start Time: {obj.start_time}, " \
                              f"Planned End Time: {obj.end_time}"
-        text = output
 
     part1 = MIMEText(text, "html")
     message.attach(part1)
 
     with smtplib.SMTP("localhost") as server:
-        server.send_message(message, from_addr=sender_email,
-                            to_addrs=recipients)
-        print("mail sent")
+        try:
+            server.send_message(message, from_addr=sender_email,
+                                to_addrs=recipients)
+        except smtplib.SMTPException as err:
+            print("Error during send message happened")
 
 
-def main():
+def f_argparser() -> object:
     parser = argparse.ArgumentParser(description="Send Emails to customers")
     parser.add_argument('--file', default=(DATA_ROOT / 'announcement.csv'),
                         type=pathlib.Path, help="Path to file to be processed")
     parser.add_argument('--type', type=str, default="Announcement",
                         help="Type of subject")
-    parser.add_argument('--db', type=str, help="Database")
+    parser.add_argument('--system', type=str, help="System")
     args = parser.parse_args()
 
-    if 'file' in args:
-        data = load_csv(file=args.file)
+    return args
 
-    today = datetime.today()
-    midnight = datetime.today()
-    midnight = midnight.replace(hour=23, minute=59, second=59, microsecond=0)
+
+def main():
+    args = f_argparser()
+    data = load_csv(file=args.file)
+
+    today = datetime.today().replace(hour=0,
+                                     minute=0,
+                                     second=1,
+                                     microsecond=0)
+
+    midnight = datetime.today().replace(hour=23,
+                                        minute=59,
+                                        second=59,
+                                        microsecond=0)
 
     for email in data:
-        # loop through the email database and check
-        if args.db == email.system:
-            if args.type == "Announcement":
-                print(args.type, email)
-                send_mail(email)
+        if today < email.start_time < midnight:
+            if args.system == list_to_string(email.system):
+                send_mail(email, args.type)
+                print("mail sent")
             else:
-                print(args.type, email)
-                send_mail(email, subject=args.type)
-
-        if not args.db:
-            if today < email.start_time < midnight:
-                if args.type == "Announcement":
-                    send_mail(email)
-                    print(args.type, email)
-                else:
-                    send_mail(email, args.type)
-                    print(args.type, email)
+                send_mail(email)
 
 
 if __name__ == "__main__":
