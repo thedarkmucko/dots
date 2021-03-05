@@ -1,2 +1,2 @@
 system,services,starttime,endtime,downtime,approval,receiver,cc,contact,contact_no,task
-vsvmon01,ittest_svc;cstest_svc;itprod_svc,01.03.2021 19:00,01.03.2021 19:30,N,N,sorger.cee@gmail.com,peter.hausler@dbconcepts.at,Peter Sorger,+43 664 80289366,Database Home Patching - Patch 25792911: HOTMDFY:ORA-600: IPC_RECREATE_QUE_2
+dbhost01;dbhost02,pdb1;pdb2,01.03.2021 19:00,01.03.2021 19:30,Y,N,sorger.cee@gmail.com,,Peter Sorger,telno,Database Home Patching

@@ -1,5 +1,5 @@
 import datetime
-import helpers as helpme
+from . import helpers as helpme
 import pathlib
 import csv
 
@@ -78,18 +78,18 @@ class EmailObject:
         return self._system
 
     @property
-    def services(self) -> str:
-        out = '<h3>Affected Services:</h3>'
-        items = self._services.split(";")
-        for item in items:
-            out += item + "<br>"
-        return out
+    def services(self):
+        items = self._services.split(';')
+        return items
 
     def __str__(self):
         return (f" Affected Systems: {list_to_string(self._system)} - "
                 f"Start Time: {helpme.datetime_to_str(self._start_time)}, "
                 f"Approval required: {str(self._approval)}, "
                 f"Downtime: {self._downtime}")
+
+    def print(self):
+        return (f"{self._system}, {self._contact}")
 
     @property
     def start_time(self):

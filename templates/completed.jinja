@@ -1,19 +1,18 @@
-{% extends 'base.html' %}
+{% extends 'base.jinja' %}
 
 {% block title%}Maintenance completed{% endblock %}
 
 {% block content %}
 <div class="container">
     <h1><span id="hash">#</span> Maintenance completed</h1>
-    <p>Dear customer,<br>The planned maintenance on systems: <br>
+    <p>Dear customer,<br>The planned maintenance on systems
         {% for system in systems %}
-        {{ system }} <br>
+            <li>{{ system }}</li>
         {% endfor %} was completed.<br>
-        All services are expected to be up and running!
+        All services are up and running!
     </p>
-    {{ services }}
     <p>
-        <b>Planned Task:</b><br>
+        <b>Finished Task:</b><br>
         {{ task }}
     </p>
 </div>

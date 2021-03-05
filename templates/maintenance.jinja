@@ -1,22 +1,21 @@
-{% extends 'base.html' %}
+{% extends 'base.jinja' %}
 
 {% block title%}Maintenance{% endblock %}
 
 {% block content %}
 <div class="container">
     <h1><span id="hash">#</span> Maintenance</h1>
-    <p>Dear customer,<br>The planned maintenance on systems: <br>
+    <p>Dear customer,<br>The planned maintenance started on following systems
+        <br>
         {% for system in systems %}
-        {{ system }} <br>
-        {% endfor %} begins.<br>
-        {% if downtime == 'YES' %}
-        We expect <b>downtime</b> on application services.
-        {% else %}
-        We don't expect disruption of application services. Short
-        disruptions might happen.
-        {% endif %}
+            <li>{{ system }}</li>
+        {% endfor %}
     </p>
-    {{ services }}
+    <p>Following services are affected during the maintenance<br>
+    {% for serv in services %}
+        <li>{{ serv }} </li>
+        {% endfor %}
+    </p>
     <p>
         <b>Start Time:</b><br>
         {{ starttime }} <br><br>
@@ -24,8 +23,7 @@
         {{ endtime }}
     </p>
     <p>
-        <b>Planned Task:</b><br>
-        {{ task }}
+        <b>Currently executed task:</b> {{ task }}
     </p>
 </div>
 {% endblock %}

@@ -5,27 +5,38 @@
 {% block content %}
 <div class="container">
     <h1><span id="hash">#</span> Announcement</h1>
-    <p>Dear customer,<br>There is a planned maintenance on systems: <br>
-        {% for system in systems %}
-        {{ system }}<br>
-        {% endfor %}
-        {% if downtime == 'YES' %}
-        We expect <b>downtime</b> on application services.
-        {% else %}
-        We don't expect disruption of application services. Short
-        disruptions might happen.
-        {% endif %}
+    <p>Dear customer,<br>
+    We would like to inform you about a planned maintenance on following
+    systems: <br>
+    {% for system in systems %}
+    <b>{{ system }} </b><br>
+    {% endfor %} <br>
+
+    {% if downtime == 'YES' %}
+    During this maintenance we are expecting <b>downtime</b>!<br><br>
+        <b>Affected Services</b><br>
+    {%  for service in services %}
+    {{ service }} <br>
+    {% endfor %}
+    {% else %}
+    This maintenance is <b>online</b>. It should not affect application
+        services nor availability of systems. <br><br>
+        <b>Running Services</b><br>
+    {%  for service in services %}
+    <li>{{ service }}</li>
+    {% endfor %}
+    {% endif %}<br>    <p>Your contact person during this maintenance is {{ contact }} available
+    on {{ contact_no }}.</p><br>
     </p>
-    {{ services }}
+    <p>
+        <b>Planned Task:</b><br>
+        {{ task }}
+    </p>
     <p>
         <b>Start Time:</b><br>
         {{ starttime }} <br><br>
         <b>Planned End Time:</b><br>
         {{ endtime }}
-    </p>
-    <p>
-        <b>Planned Task:</b><br>
-        {{ task }}
     </p>
 </div>
 {% endblock %}

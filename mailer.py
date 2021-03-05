@@ -5,17 +5,17 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader
-
-from .helpers import EmailObject
+from helpers import EmailObject, helpers
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
 DATA_ROOT = PROJECT_ROOT / 'data'
+
 
 def send_mail(obj: EmailObject, subject="Announcement") -> None:
     sender_email = "notify@dbconcepts.at"
     message = MIMEMultipart("alternative")
 
-    message["From"] = input("Please put your email: ")
+    message["From"] = sender_email
     message["To"] = ', '.join(obj.receivers)
 
     if obj.cc is None:
@@ -30,13 +30,13 @@ def send_mail(obj: EmailObject, subject="Announcement") -> None:
     if subject == "Maintenance":
         template = env.get_template("maintenance.jinja")
         text = template.render(systems=obj.system,
-                                 downtime=obj._downtime,
-                                 starttime=obj.start_time,
-                                 endtime=obj.end_time,
-                                 task=obj._task,
-                                 contact=obj._contact,
-                                 contact_no=obj._contact_no,
-                                 services=obj.services)
+                               downtime=obj._downtime,
+                               starttime=obj.start_time,
+                               endtime=obj.end_time,
+                               task=obj._task,
+                               contact=obj._contact,
+                               contact_no=obj._contact_no,
+                               services=obj.services)
 
         message["Subject"] = f"Announcement: {subject} started on " \
                              f"{EmailObject.list_to_string(obj.system)} " \
@@ -122,7 +122,7 @@ def send_mail(obj: EmailObject, subject="Announcement") -> None:
             print("Error during send message happened")
 
 
-def f_argparser() -> object:
+def f_argparser():
     parser = argparse.ArgumentParser(description="Send Emails to customers")
     parser.add_argument('--file', default=(DATA_ROOT / 'announcement.csv'),
                         type=pathlib.Path, help="Path to file to be processed")
