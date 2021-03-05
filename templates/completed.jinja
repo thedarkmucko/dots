@@ -5,9 +5,9 @@
 {% block content %}
 <div class="container">
     <h1><span id="hash">#</span> Maintenance completed</h1>
-    <p>Dear customer,<br>The planned maintenance on the systems
+    <p>Dear customer,<br>The planned maintenance on systems: <br>
         {% for system in systems %}
-        {{ system }}
+        {{ system }} <br>
         {% endfor %} was completed.<br>
         All services are expected to be up and running!
     </p>

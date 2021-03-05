@@ -5,9 +5,9 @@
 {% block content %}
 <div class="container">
     <h1 id="problem"><span id="hash">#</span> Problem</h1>
-    <p>Dear customer,<br>The planned maintenance on the systems
+    <p>Dear customer,<br>The planned maintenance on systems: <br>
         {% for system in systems %}
-        {{ system }}
+        {{ system }} <br>
         {% endfor %} is experiencing problems.<br>
         We are working on a solution!
     </p>
